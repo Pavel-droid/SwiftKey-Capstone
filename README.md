@@ -27,4 +27,9 @@ Here are some key points about corpora:
 
 In summary, corpora play a crucial role in understanding and studying language, aiding linguistic research, and enabling the development of language-related technologies. They serve as comprehensive collections of textual data that facilitate insights into the structure and usage of languages.
 
+################## 10.10.2023 ##################
+I have been studying basics of NLP in last 10 days. It is pretty new topic for me. Looks like there are two packages which I might be interested in - tm and quanteda. I need to progress in week 2 tasks, already late.
+
+
+
 
