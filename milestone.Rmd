@@ -1,0 +1,189 @@
+---
+title: "Prediction algoritm for words | Milestone report"
+author: "PP"
+date: "2023-10-10"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## What and why
+Capstone project of the Coursera data science specialization consist of milestone report in week 2. The aim of this report is to show an understanding of the various statistical properties of the data set that can later be used when building the prediction model. Using exploratory data analysis, this report describes the major features of available data. Later it summarizes my plans for creating the predictive model for words.
+
+I will be using data from three available sources in english - blogs, news, twitter to train my model.
+
+## Environment setup
+```{r}
+rm(list = ls(all.names = TRUE))
+library(tidyverse)
+library(readtext)
+library(quanteda)
+library(quanteda.textstats)
+library(quanteda.textplots)
+library(quanteda.textmodels)
+library(gt)
+```
+
+
+## Getting data
+I am using provided link, downloading available zip file, unzipping it and loading selected files to R into one list object.
+```{r}
+# download and unzip
+url <- "https://d396qusza40orc.cloudfront.net/dsscapstone/dataset/Coursera-SwiftKey.zip"
+download_zip <- "download.zip"
+
+if(!file.exists(download_zip)){
+  download.file(url, destfile = download_zip)
+}
+
+if(!dir.exists("final")){
+  unzip(download_zip)
+}
+
+list <- unzip(download_zip, list = T)
+file_list <- gt(list)
+file_list
+```
+
+## Basic exploratory analysis of data
+```{r}
+path_twitter <- list[11,1]
+path_news <- list[12,1]
+path_blogs <- list[13,1]
+
+file_size <- c(round(file.size(path_twitter)/1024^2, 1), round(file.size(path_news)/1024^2, 1), round(file.size(path_blogs)/1024^2, 1))
+
+con <- file(path_twitter, "r")
+tw1 <- readLines(con, 3)
+close(con)
+
+con <- file(path_news, "r")
+ne1 <- readLines(con, 3)
+close(con)
+
+con <- file(path_blogs, "r")
+bl1 <- readLines(con, 3)
+close(con)
+
+txt_raw <- readtext(list[10,1], docvarsfrom = "filenames", docvarnames = c("language", "source"))
+corpus_raw <- corpus(txt_raw) # preparing raw corpus
+sentence_no <- c(nsentence(corpus_raw[3]), nsentence(corpus_raw[2]), nsentence(corpus_raw[1]))
+```
+
+Basic parameters of source files are listed below.
+```{r}
+# visualization of exploratory analysis outcome
+source_file <- c("US Twitter", "US News", "US Blogs")
+param <- data.frame(source_file, file_size, sentence_no)
+table_gt <- gt(param)
+table_gt
+```
+There are 3 rather big txt files of size from 159MB to 200MB. These 3 files contain from hundreds of thousands to millions of sentences.
+          
+Example texts, first three sentences are available below.
+```{r}
+example_text <- data.frame(tw1, ne1, bl1)
+names(example_text) <- source_file
+example_gt <- example_text|> gt()
+example_gt
+```
+It seems (as expected) I am dealing with "typical" natural language with variability, wide range of expressions, diverse vocabulary, grammar structures, regional dialects, with ambiguity, context-dependent meanings, with creativity, novel combinations of words and ideas, with imperfection, with errors, hesitations, informal expressions.
+
+To be able to work efficiently with corpus, taking into account limitations of my PC, I am going to work with only 2% of original corpus.
+
+## Further exploratory analysis using simplified corpus
+I am merging content of all three files because I would like to train my model on one train set in later stages of this project. I am using only 2% of original corpus as already stated.
+```{r}
+# sub-setting corpus to be easier to handle in following steps
+corpus_sentences <- corpus_reshape(corpus_raw, to = "sentences")
+
+corpus_samples <- corpus_sample(corpus_sentences, size = 0.02*ndoc(corpus_sentences))
+corpus_samples_stats <- summary(corpus_samples)
+ndoc(corpus_samples)
+head(corpus_samples_stats)
+```
+Simplified corpus contains around 96000 sentences.
+
+Preparation of Document-Feature Matrix (DFM) is my next step. I will use it for couple of following analysis.
+```{r}
+dfm_sample <- dfm(corpus_samples, tolower = TRUE,stem = TRUE, remove_punct = TRUE, remove_numbers = TRUE)
+dfm_sample[, 1:5]
+```
+I changes all data to lower case, stemmed content, removed punctuation and removed numbers. I am not removing stopwords as I expect them to be important for word prediction model.
+
+Top features within prepared DFM are following
+```{r}
+topfeatures(dfm_sample, 20)
+```
+
+Couple of visualizations to better understand content of corpus.
+```{r}
+set.seed(8791)
+textplot_wordcloud(dfm_sample, min_count = 500, random_order = FALSE,
+                   rotation = .25, 
+                   color = RColorBrewer::brewer.pal(8,"Dark2"))
+
+features_dfm_sample <- textstat_frequency(dfm_sample, n = 50)
+features_dfm_sample$feature <- with(features_dfm_sample, reorder(feature, -frequency))
+ggplot(features_dfm_sample, aes(x = feature, y = frequency)) +
+    geom_point() + 
+    theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+```
+
+Creating ngrams for simple visualization but also for future usage.
+```{r}
+unigrams_top_20 <- topfeatures(dfm_sample, 20)
+dfuni <- data.frame(word=names(topFeatures), count=topFeatures)
+ggplot(df, aes(x=reorder(df$word, df$count), y=df$count)) + geom_bar(stat="identity") + coord_flip() + xlab('Count') + ylab('Words (unigrams)') + ggtitle('Most Common Unigrams Including Stop Words')
+
+bigrams <- tokens_ngrams(tokens(corpus_samples), n = 2, concatenator = "_")
+trigrams <- tokens_ngrams(tokens(corpus_samples), n = 3, concatenator = "_")
+```
+
+
+```{r}
+
+        
+
+
+
+```
+
+
+
+## Plans of next action
+My initial steps are barely start of the real work. There are many things I need to tackle. 
+
+Here is my plan:
+
+**Corpus Creation**
+Preprocess the data to create a corpus, which involves tasks such as tokenization, stemming, and removing stop words.
+
+**Continuation of Data Exploration and Analysis**
+Understand the characteristics of your dataset by exploring key statistics, visualizing word frequencies, and identifying patterns. Consider using techniques like TF-IDF (Term Frequency-Inverse Document Frequency) to weigh the importance of words in your corpus.
+
+**Feature Extraction**
+Convert your text data into a format suitable for machine learning models. This often involves using techniques like Bag-of-Words or more advanced methods like Word Embeddings (Word2Vec, GloVe) to represent words numerically.
+
+**Model Selection**
+Choose a suitable predictive model based on the nature of your task. For word prediction, recurrent neural networks (RNNs), long short-term memory networks (LSTMs), or transformer-based models like GPT (Generative Pre-trained Transformer) can be effective.
+
+**Model Training**
+Split your dataset into training and validation sets. Train your chosen model using the training set, adjusting hyperparameters as needed to optimize performance. Validate your model on the validation set to ensure it generalizes well to new data.
+
+**Evaluation**
+Assess the performance of your model using appropriate evaluation metrics, depending on your specific task (e.g., accuracy, precision, recall, F1 score).
+
+**Fine-Tuning and Optimization**
+Refine your model based on the evaluation results. This may involve adjusting hyperparameters, trying different architectures, or incorporating additional features.
+
+**Testing**
+Once satisfied with the model's performance on the validation set, test it on a separate test set to evaluate its generalization to unseen data.
+
+**Deployment**
+If the model performs well, consider deploying it in your intended application. This might involve integrating it into a larger system or creating a user interface for interaction.
+
+
