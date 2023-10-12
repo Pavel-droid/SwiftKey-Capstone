@@ -30,6 +30,6 @@ In summary, corpora play a crucial role in understanding and studying language, 
 ################## 10.10.2023 ##################
 I have been studying basics of NLP in last 10 days. It is pretty new topic for me. Looks like there are two packages which I might be interested in - tm and quanteda. I need to progress in week 2 tasks, already late.
 
-
-
+################## 12.10.2023 ##################
+I finished milestone report. I was a lot of work at new topic for me. I am happy that I was able to finish it. My next step is to learn more about word prediction models.
 
