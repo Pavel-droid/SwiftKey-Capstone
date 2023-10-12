@@ -10,9 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ## What and why
-Capstone project of the Coursera data science specialization consist of milestone report in week 2. The aim of this report is to show an understanding of the various statistical properties of the data set that can later be used when building the prediction model. Using exploratory data analysis, this report describes the major features of available data. Later it summarizes my plans for creating the predictive model for words.
-
-I will be using data from three available sources in english - blogs, news, twitter to train my model.
+Capstone project of the Coursera data science specialization consist of milestone report in week 2. The aim of this report is to show an understanding of the various statistical properties of the data set that can later be used when building the word prediction model. Using exploratory data analysis, this report describes the major features of available data. Later it summarizes my plans for creating the word prediction model.
 
 ## Environment setup
 ```{r}
@@ -26,9 +24,8 @@ library(quanteda.textmodels)
 library(gt)
 ```
 
-
 ## Getting data
-I am using provided link, downloading available zip file, unzipping it and loading selected files to R into one list object.
+I am using data from three available sources in english - blogs, news, twitter. Data from  provided link are downloaded in zip file, unzipped and directory structure is visualized.
 ```{r}
 # download and unzip
 url <- "https://d396qusza40orc.cloudfront.net/dsscapstone/dataset/Coursera-SwiftKey.zip"
@@ -47,7 +44,7 @@ file_list <- gt(list)
 file_list
 ```
 
-## Basic exploratory analysis of data
+## Basic exploratory analysis of provided data
 ```{r}
 path_twitter <- list[11,1]
 path_news <- list[12,1]
@@ -89,11 +86,13 @@ names(example_text) <- source_file
 example_gt <- example_text|> gt()
 example_gt
 ```
-It seems (as expected) I am dealing with "typical" natural language with variability, wide range of expressions, diverse vocabulary, grammar structures, regional dialects, with ambiguity, context-dependent meanings, with creativity, novel combinations of words and ideas, with imperfection, with errors, hesitations, informal expressions.
+It seems (as expected) I am dealing with "typical" natural language data with variability, wide range of expressions, diverse vocabulary, grammar structures, regional dialects, with ambiguity, context-dependent meanings, with creativity, novel combinations of words and ideas, with imperfection, with errors, hesitations, informal expressions.
 
 To be able to work efficiently with corpus, taking into account limitations of my PC, I am going to work with only 2% of original corpus.
 
 ## Further exploratory analysis using simplified corpus
+
+### Creation of simplified corpus
 I am merging content of all three files because I would like to train my model on one train set in later stages of this project. I am using only 2% of original corpus as already stated.
 ```{r}
 # sub-setting corpus to be easier to handle in following steps
@@ -106,84 +105,120 @@ head(corpus_samples_stats)
 ```
 Simplified corpus contains around 96000 sentences.
 
-Preparation of Document-Feature Matrix (DFM) is my next step. I will use it for couple of following analysis.
+### Tokenization
+Once I have a corpus, I can create basic token list with punctuation, numbers, urls removed.
 ```{r}
-dfm_sample <- dfm(corpus_samples, tolower = TRUE,stem = TRUE, remove_punct = TRUE, remove_numbers = TRUE)
-dfm_sample[, 1:5]
-```
-I changes all data to lower case, stemmed content, removed punctuation and removed numbers. I am not removing stopwords as I expect them to be important for word prediction model.
-
-Top features within prepared DFM are following
-```{r}
-topfeatures(dfm_sample, 20)
+token_samples <- tokens(corpus_samples, tolower = TRUE, remove_punct = TRUE, remove_numbers = TRUE, remove_url = TRUE)
 ```
 
-Couple of visualizations to better understand content of corpus.
+Preparation of Document-Feature Matrix (DFM) is my next step. I will use it for couple of following analysis and steps of this project.
 ```{r}
+dfm_samples <- dfm(token_samples)
+dfm_samples[, 1:5]
+```
+I decided to NOT remove stop words as I expect them to be important for word prediction as they are extensively used in sentences.
+
+What about to check if the word data is part of my corpus and how is it used in context.
+```{r}
+kw_data <- kwic(token_samples, pattern = "data")
+nrow(kw_data)
+gt(head(kw_data, 5))
+```
+There are 122 occurences of word data in my data set. I visualized 5 examples of this word in context. Just for fun.
+
+### Visualizations
+```{r, echo=FALSE}
 set.seed(8791)
-textplot_wordcloud(dfm_sample, min_count = 500, random_order = FALSE,
+textplot_wordcloud(dfm_samples, min_count = 100, random_order = FALSE,
                    rotation = .25, 
-                   color = RColorBrewer::brewer.pal(8,"Dark2"))
-
-features_dfm_sample <- textstat_frequency(dfm_sample, n = 50)
-features_dfm_sample$feature <- with(features_dfm_sample, reorder(feature, -frequency))
-ggplot(features_dfm_sample, aes(x = feature, y = frequency)) +
-    geom_point() + 
-    theme(axis.text.x = element_text(angle = 90, hjust = 1))
-
+                   color = RColorBrewer::brewer.pal(10,"RdBu"))
 ```
 
-Creating ngrams for simple visualization but also for future usage.
-```{r}
-unigrams_top_20 <- topfeatures(dfm_sample, 20)
-dfuni <- data.frame(word=names(topFeatures), count=topFeatures)
-ggplot(df, aes(x=reorder(df$word, df$count), y=df$count)) + geom_bar(stat="identity") + coord_flip() + xlab('Count') + ylab('Words (unigrams)') + ggtitle('Most Common Unigrams Including Stop Words')
-
-bigrams <- tokens_ngrams(tokens(corpus_samples), n = 2, concatenator = "_")
-trigrams <- tokens_ngrams(tokens(corpus_samples), n = 3, concatenator = "_")
-```
-
+Couple of visualizations can be helpful to get better understanding of corpus content.
 
 ```{r}
+top_f <- data.frame(data.frame(word = names(topfeatures(dfm_samples, 20)), n = topfeatures(dfm_samples, 20)))
 
-        
-
-
-
+top_f %>%
+  ggplot(aes(n, reorder(word,n))) +
+  geom_col() +
+  labs(x="Frequency",y = "Unigram") +
+  theme_light()
 ```
 
+We can see that words mostly identified as stop words are the most common in our data set. It is another prediction that they are needed in our prediction model.
+
+### Creating ngrams
+Unigrams are already available, but I would like to have a look also at bi, tri, quad grams as these could be useful for our prediction model. This is a computationally intensive process and it needs a lot of memory. I might need to save ngrams to hdd during optimization of my model.
+```{r}
+bigrams <- tokens_ngrams(token_samples, n = 2)
+trigrams <- tokens_ngrams(token_samples, n = 3)
+quadgrams <- tokens_ngrams(token_samples, n = 4)
+
+dfm_bi <- dfm(bigrams)
+dfm_tri <- dfm(trigrams)
+dfm_quad <- dfm(quadgrams)
+
+bigram_tot <- enframe(sort(colSums(dfm_bi),TRUE))
+trigram_tot <- enframe(sort(colSums(dfm_tri),TRUE))
+quadgram_tot <- enframe(sort(colSums(dfm_quad),TRUE))
+```
+
+Now we can have a look which are the most common ngrams.
+```{r, echo=FALSE}
+library(patchwork)
+# Plot for bigrams
+plot_bigram <- ggplot(bigram_tot[1:10,], aes(value, reorder(name, value))) +
+  geom_col() +
+  labs(x = "Frequency", y = "Bigram") +
+  theme_light()
+
+# Plot for trigrams
+plot_trigram <- ggplot(trigram_tot[1:10,], aes(value, reorder(name, value))) +
+  geom_col() +
+  labs(x = "Frequency", y = "Trigram") +
+  theme_light()
+
+# Plot for quadgrams
+plot_quadgram <- ggplot(quadgram_tot[1:10,], aes(value, reorder(name, value))) +
+  geom_col() +
+  labs(x = "Frequency", y = "Quadgram") +
+  theme_light()
+
+# Combine plots in one row using patchwork
+combined_plots <- plot_bigram + plot_trigram + plot_quadgram
+
+# Display the combined plot
+combined_plots
+```
 
 
 ## Plans of next action
 My initial steps are barely start of the real work. There are many things I need to tackle. 
 
-Here is my plan:
+### Ideas about models
+**Bigram Model with Laplace Smoothing**
+Concept: In a bigram model, the probability of a word depends only on the preceding word. Laplace smoothing is applied to handle cases where certain bigrams are unseen in the training data.
 
-**Corpus Creation**
-Preprocess the data to create a corpus, which involves tasks such as tokenization, stemming, and removing stop words.
+Implementation: Calculate bigram probabilities by counting occurrences of word pairs and apply Laplace smoothing to account for unseen combinations. To predict the next word, use the bigram with the highest probability given the current word.
 
-**Continuation of Data Exploration and Analysis**
-Understand the characteristics of your dataset by exploring key statistics, visualizing word frequencies, and identifying patterns. Consider using techniques like TF-IDF (Term Frequency-Inverse Document Frequency) to weigh the importance of words in your corpus.
+**Trigram Model with Back-off**
+Concept: A trigram model predicts the next word based on the two preceding words. Back-off is employed to gracefully handle cases where a trigram is unseen, falling back to a bigram or unigram model.
 
-**Feature Extraction**
-Convert your text data into a format suitable for machine learning models. This often involves using techniques like Bag-of-Words or more advanced methods like Word Embeddings (Word2Vec, GloVe) to represent words numerically.
+Implementation: Calculate trigram probabilities and, if a trigram is unseen, fall back to the corresponding bigram or unigram probabilities. Choose the word with the highest probability for prediction.
 
-**Model Selection**
-Choose a suitable predictive model based on the nature of your task. For word prediction, recurrent neural networks (RNNs), long short-term memory networks (LSTMs), or transformer-based models like GPT (Generative Pre-trained Transformer) can be effective.
+These models represent a progression in complexity from the bigram to the trigram model. They serve as foundational building blocks for more advanced N-gram models and can be implemented with relative simplicity using basic probability calculations.
 
-**Model Training**
-Split your dataset into training and validation sets. Train your chosen model using the training set, adjusting hyperparameters as needed to optimize performance. Validate your model on the validation set to ensure it generalizes well to new data.
+### My next steps
+- Calculation of probabilities for each ngram
+- Application of smoothing
+- Implementation of prediction logic
+- Evaluation of model performance
+- Iterative refinement
+- Back-off strategies
+- Optimization for computational efficiency
 
-**Evaluation**
-Assess the performance of your model using appropriate evaluation metrics, depending on your specific task (e.g., accuracy, precision, recall, F1 score).
 
-**Fine-Tuning and Optimization**
-Refine your model based on the evaluation results. This may involve adjusting hyperparameters, trying different architectures, or incorporating additional features.
 
-**Testing**
-Once satisfied with the model's performance on the validation set, test it on a separate test set to evaluate its generalization to unseen data.
-
-**Deployment**
-If the model performs well, consider deploying it in your intended application. This might involve integrating it into a larger system or creating a user interface for interaction.
 
 
