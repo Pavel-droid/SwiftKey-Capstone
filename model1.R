@@ -37,7 +37,7 @@ con <- file(path_blogs, "r")
 bl1 <- readLines(con, 33000)
 close(con)
 
-corpus_99k <- corpus(c(tw1, ne1, bl1))
+corpus_99 <- corpus(c(tw1, ne1, bl1))
 
 # corpus 999k
 con <- file(path_twitter, "r")
@@ -52,13 +52,13 @@ con <- file(path_blogs, "r")
 bl2 <- readLines(con, 330000)
 close(con)
 
-corpus_999k <- corpus(c(tw2, ne2, bl2))
+corpus_999 <- corpus(c(tw2, ne2, bl2))
 
 # tokens 99k
-toks99 <- tokens(corpus_99k, remove_punct = T, remove_numbers = T, remove_symbols = T,
+toks99 <- tokens(corpus_99, remove_punct = T, remove_numbers = T, remove_symbols = T,
                  remove_url = T)
 # tokens 999k
-toks999 <- tokens(corpus_999k, remove_punct = T, remove_numbers = T, remove_symbols = T,
+toks999 <- tokens(corpus_999, remove_punct = T, remove_numbers = T, remove_symbols = T,
                  remove_url = T)
 
 # dfm 99k
@@ -66,7 +66,7 @@ dfm99 <- dfm(toks99)
 ndoc(dfm99)
 nfeat(dfm99)
 print(dfm99)
-head(featnames(dfm99), 20)
+head(featnames(dfm99), 10)
 head(rowSums(dfm99), 10)
 topfeatures(dfm99)
 
@@ -78,7 +78,9 @@ dfm99_tfidf <- dfm_tfidf(dfm99)
 print(dfm99_tfidf)
 
 dfm99_nostop <- dfm_select(dfm99, pattern = stopwords("en"), selection = "remove")
-print(dfm99_nostop)
+ndoc(dfm99_nostop)
+nfeat(dfm99_nostop)
+print(dfm99)
 
 dfm99_long <- dfm_keep(dfm99, min_nchar = 3)
 print(dfm99_long)
