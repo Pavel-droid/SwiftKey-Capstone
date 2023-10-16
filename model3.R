@@ -57,10 +57,10 @@ dfm2 <- dfm(gram2)
 dfm3 <- dfm(gram3)
 dfm4 <- dfm(gram4)
 
-dfm1 <- dfm_trim(dfm1, min_termfreq = 8, max_docfreq = 0.1,docfreq_type = "prop")
-dfm2 <- dfm_trim(dfm2, min_termfreq = 6, max_docfreq = 0.1, docfreq_type = "prop")
-dfm3 <- dfm_trim(dfm3, min_termfreq = 4, max_docfreq = 0.1, docfreq_type = "prop")
-dfm4 <- dfm_trim(dfm4, min_termfreq = 2, max_docfreq = 0.1, docfreq_type = "prop")
+dfm1 <- dfm_trim(dfm1, min_termfreq = 2, max_docfreq = 0.1,docfreq_type = "prop")
+dfm2 <- dfm_trim(dfm2, max_docfreq = 0.1, docfreq_type = "prop")
+dfm3 <- dfm_trim(dfm3, max_docfreq = 0.1, docfreq_type = "prop")
+dfm4 <- dfm_trim(dfm4, max_docfreq = 0.1, docfreq_type = "prop")
 
 # words
 sums1 <- colSums(dfm1)
@@ -168,7 +168,7 @@ if (inp_l == 0){
 }
 }
 
-predict_word("try me")
+predict_word("he started telling")
 
 
 
