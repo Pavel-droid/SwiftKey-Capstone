@@ -87,9 +87,13 @@ print(dfm99_long)
 topfeatures(dfm99_long, 10)
 
 dfm99_freq <- dfm_trim(dfm99, min_termfreq = 5)
+ndoc(dfm99_freq)
+nfeat(dfm99_freq)
 print(dfm99_freq)
 
 dfm99_docfreq <- dfm_trim(dfm99, max_docfreq = 0.1, docfreq_type = "prop")
+ndoc(dfm99_docfreq)
+nfeat(dfm99_docfreq)
 print(dfm99_docfreq)
 topfeatures(dfm99_docfreq)
 
@@ -108,6 +112,7 @@ size <- log(colSums(dfm_select(dfm99, feat, selection = "keep")))
 set.seed(144)
 textplot_network(fcm99_select, min_freq = 0.8, vertex_size = size / max(size) * 3)
 
+textstat_frequency(dfm99, n = 10)      
 
 # n-grams 99k
 gram2_99<- tokens_ngrams(toks99, n = 2)
