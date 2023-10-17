@@ -28,15 +28,15 @@ path_news <- list[12,1]
 path_blogs <- list[13,1]
 
 con <- file(path_twitter, "r")
-tw1 <- readLines(con, 3300)
+tw1 <- readLines(con, 10000)
 close(con)
 
 con <- file(path_news, "r")
-ne1 <- readLines(con, 3300)
+ne1 <- readLines(con, 10000)
 close(con)
 
 con <- file(path_blogs, "r")
-bl1 <- readLines(con, 3300)
+bl1 <- readLines(con, 10000)
 close(con)
 
 corpus_99 <- corpus(c(tw1, ne1, bl1))
@@ -57,10 +57,10 @@ dfm2 <- dfm(gram2)
 dfm3 <- dfm(gram3)
 dfm4 <- dfm(gram4)
 
-dfm1 <- dfm_trim(dfm1, min_termfreq = 2, max_docfreq = 0.1,docfreq_type = "prop")
-dfm2 <- dfm_trim(dfm2, max_docfreq = 0.1, docfreq_type = "prop")
-dfm3 <- dfm_trim(dfm3, max_docfreq = 0.1, docfreq_type = "prop")
-dfm4 <- dfm_trim(dfm4, max_docfreq = 0.1, docfreq_type = "prop")
+dfm1 <- dfm_trim(dfm1, min_termfreq = 2, max_docfreq = 0.2,docfreq_type = "prop")
+dfm2 <- dfm_trim(dfm2, min_termfreq = 2, max_docfreq = 0.2, docfreq_type = "prop")
+dfm3 <- dfm_trim(dfm3, max_docfreq = 0.2, docfreq_type = "prop")
+dfm4 <- dfm_trim(dfm4, max_docfreq = 0.2, docfreq_type = "prop")
 
 # words
 sums1 <- colSums(dfm1)
