@@ -109,7 +109,6 @@ words4 <- readRDS("words4.rds")
 
 # word prediction function
 predict_word <- function(raw_input){
-
 inp <- tokens(raw_input, remove_punct = TRUE, remove_numbers = TRUE, remove_symbols = TRUE,
                       remove_url = TRUE)
 inp <- tokens_wordstem(inp, language = "en")
@@ -127,12 +126,19 @@ if (inp_l >= 3) {
   
   if (nrow(words4_f)>0) {
     print(words4_f[1,4])
+          assign(prediction, words4_f[1,4])
   } else if (nrow(words4_f)==0 && nrow(words3_f)>0){
-    print(words3_f[1,3]) 
+          y <- words3_f[1,3]
+          print(y) 
+          return(y)
   } else if (nrow(words3_f)==0 && nrow(words2_f)>0){
-    print(words2_f[1,2])
+          y <- words2_f[1,2]
+          print(y)
+          return(y)
   } else if (nrow(words2_f)==0){
-    print(words1_f[1,1])
+          y <- words1_f[1,1]
+          print(y)
+          return(y)
   }
 } 
 
@@ -143,11 +149,17 @@ if (inp_l == 2) {
         words2_f <- words2 |> filter(word_1 == w_1) |> arrange(-count)
         words1_f <- words1 |> arrange(-count)
         if (nrow(words3_f)>0){
-                print(words3_f[1,3]) 
+                y <- words3_f[1,3]
+                print(y) 
+                return(y)
         } else if (nrow(words3_f)==0 && nrow(words2_f)>0){
-                  print(words2_f[1,2])
+                y <- words2_f[1,2]
+                print(y)
+                return(y)
         } else if (nrow(words2_f)==0){
-                  print(words1_f[1,1])
+                y <- words1_f[1,1]
+                print(y)
+                return(y)
         }
 } 
 
@@ -156,16 +168,148 @@ if (inp_l == 1) {
         words2_f <- words2 |> filter(word_1 == w_1) |> arrange(-count)
         words1_f <- words1 |> arrange(-count)
         if (nrow(words2_f)>0){
-                print(words2_f[1,2]) 
+                y <- words2_f[1,2]
+                print(y)
+                return(y)
         } else if (nrow(words2_f)==0) {
-                print(words1_f[1,1])
+                y <- words1_f[1,1]
+                print(y)
+                return(y)
         }
 }
 
 if (inp_l == 0){
         words1_f <- words1 |> arrange(-count)
-        print(words1_f[1,1])
+        y <- words1_f[1,1]
+        print(y)
+        return(y)
 }
 }
 
-predict_word("he started telling")
+
+
+
+
+
+
+
+
+# model testing
+install.packages("reader")
+library("reader")
+
+path_twitter_test <- list[11,1]
+path_news_test <- list[12,1]
+path_blogs_test <- list[13,1]
+
+tw1_test <- n.readLines(path_twitter_test, header = FALSE, n = 330, skip = 10000)
+ne1_test <- n.readLines(path_news_test, header = FALSE, n = 330, skip = 10000)
+bl1_test <- n.readLines(path_blogs_test, header = FALSE, n = 330, skip = 10000)
+
+# testing data into a single corpus
+corpus_test <- corpus(c(tw1_test, ne1_test, bl1_test))
+
+# tokenization of testing data
+toks_test <- tokens(corpus_test, remove_punct = TRUE, remove_numbers = TRUE, remove_symbols = TRUE,
+                    remove_url = TRUE)
+toks_test_stem <- tokens_wordstem(toks_test, language = "en")
+
+# n-grams for testing data
+gram2_test <- tokens_ngrams(toks_test_stem, n = 2)
+gram3_test <- tokens_ngrams(toks_test_stem, n = 3)
+gram4_test <- tokens_ngrams(toks_test_stem, n = 4)
+
+# dfm
+dfm2_test <- dfm(gram2_test)
+dfm3_test <- dfm(gram3_test)
+dfm4_test <- dfm(gram4_test)
+
+# words
+sums2_test <- colSums(dfm2_test)
+sums3_test <- colSums(dfm3_test)
+sums4_test <- colSums(dfm4_test)
+
+words2_test <- data.table(
+        word_1 = sapply(strsplit(names(sums2_test), "_", fixed = TRUE), '[[', 1),
+        word_2 = sapply(strsplit(names(sums2_test), "_", fixed = TRUE), '[[', 2),
+        count = sums2_test)
+
+words3_test <- data.table(
+        word_1 = sapply(strsplit(names(sums3_test), "_", fixed = TRUE), '[[', 1),
+        word_2 = sapply(strsplit(names(sums3_test), "_", fixed = TRUE), '[[', 2),
+        word_3 = sapply(strsplit(names(sums3_test), "_", fixed = TRUE), '[[', 3),
+        count = sums3_test)
+
+words4_test <- data.table(
+        word_1 = sapply(strsplit(names(sums4_test), "_", fixed = TRUE), '[[', 1),
+        word_2 = sapply(strsplit(names(sums4_test), "_", fixed = TRUE), '[[', 2),
+        word_3 = sapply(strsplit(names(sums4_test), "_", fixed = TRUE), '[[', 3),
+        word_4 = sapply(strsplit(names(sums4_test), "_", fixed = TRUE), '[[', 4),
+        count = sums4_test)
+
+
+
+
+# testing accuracy using 2-grams
+correct_predictions <- 0
+total_predictions <- 100
+sam1 <- 1
+# total_predictions <- nrow(words2_test)
+
+for (i in 1:total_predictions) {
+        
+        sam1 <- sample(nrow(words2_test), 1)
+        # Extract input word (word_1) from the current row
+        input_word <- as.character(words2_test[i, 1])
+        
+        # Call the predict_word function with the input word
+        
+        predicted_word <- predict_word(input_word)
+        
+        # Extract the actual target word (word_2) from the current row
+        actual_word <- words2_test[i, "word_2"]
+        
+        # Compare the predicted word with the actual word
+        if (predicted_word == actual_word) {
+                correct_predictions <- correct_predictions + 1
+        }
+}
+
+# Calculate accuracy
+accuracy_2g <- correct_predictions / total_predictions
+cat("Accuracy_2g:", accuracy, "\n")
+
+
+
+# testing accuracy using 3-grams
+correct_predictions <- 0
+total_predictions <- 2000
+# total_predictions <- nrow(words3_test)
+
+# Iterate through each row in words3_test
+for (i in 1:total_predictions) {
+        # Extract input word (word_1) from the current row
+        input_word <- as.character(paste(words3_test[i, 1],words3_test[i, 2], sep= " " ))
+        
+        # Call the predict_word function with the input word
+        
+        predicted_word <- predict_word(input_word)
+        
+        # Extract the actual target word (word_2) from the current row
+        actual_word <- words2_test[i, "word_2"]
+        
+        # Compare the predicted word with the actual word
+        if (predicted_word == actual_word) {
+                correct_predictions <- correct_predictions + 1
+        }
+}
+
+# Calculate accuracy
+accuracy_3g <- correct_predictions / total_predictions
+cat("Accuracy_3g:", accuracy, "\n")
+
+
+
+
+
+
