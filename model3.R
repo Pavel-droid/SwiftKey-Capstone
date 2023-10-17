@@ -169,9 +169,3 @@ if (inp_l == 0){
 }
 
 predict_word("he started telling")
-
-
-
-
-
-
