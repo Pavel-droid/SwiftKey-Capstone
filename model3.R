@@ -101,7 +101,7 @@ saveRDS(words2,"words2.rds")
 saveRDS(words3,"words3.rds")
 saveRDS(words4,"words4.rds")
 
-## trials
+# training words
 words1 <- readRDS("words1.rds")
 words2 <- readRDS("words2.rds")
 words3 <- readRDS("words3.rds")
@@ -125,8 +125,9 @@ if (inp_l >= 3) {
   words1_f <- words1 |> arrange(-count)
   
   if (nrow(words4_f)>0) {
-    print(words4_f[1,4])
-          assign(prediction, words4_f[1,4])
+          y <- words4_f[1,4]
+          print(y)
+          return(y)
   } else if (nrow(words4_f)==0 && nrow(words3_f)>0){
           y <- words3_f[1,3]
           print(y) 
@@ -189,11 +190,7 @@ if (inp_l == 0){
 
 
 
-
-
-
-
-
+################################################################################
 # model testing
 install.packages("reader")
 library("reader")
@@ -202,9 +199,9 @@ path_twitter_test <- list[11,1]
 path_news_test <- list[12,1]
 path_blogs_test <- list[13,1]
 
-tw1_test <- n.readLines(path_twitter_test, header = FALSE, n = 330, skip = 10000)
-ne1_test <- n.readLines(path_news_test, header = FALSE, n = 330, skip = 10000)
-bl1_test <- n.readLines(path_blogs_test, header = FALSE, n = 330, skip = 10000)
+tw1_test <- n.readLines(path_twitter_test, header = FALSE, n = 3300, skip = 10000)
+ne1_test <- n.readLines(path_news_test, header = FALSE, n = 3300, skip = 10000)
+bl1_test <- n.readLines(path_blogs_test, header = FALSE, n = 3300, skip = 10000)
 
 # testing data into a single corpus
 corpus_test <- corpus(c(tw1_test, ne1_test, bl1_test))
@@ -247,68 +244,84 @@ words4_test <- data.table(
         word_4 = sapply(strsplit(names(sums4_test), "_", fixed = TRUE), '[[', 4),
         count = sums4_test)
 
+saveRDS(words2_test,"words2_t.rds")
+saveRDS(words3_test,"words3_t.rds")
+saveRDS(words4_test,"words4_t.rds")
 
-
+# testing words
+words2_t <- readRDS("words2_t.rds")
+words3_t <- readRDS("words3_t.rds")
+words4_t <- readRDS("words4_t.rds")
 
 # testing accuracy using 2-grams
 correct_predictions <- 0
-total_predictions <- 100
-sam1 <- 1
-# total_predictions <- nrow(words2_test)
+total_predictions <- 5000
 
 for (i in 1:total_predictions) {
         
-        sam1 <- sample(nrow(words2_test), 1)
-        # Extract input word (word_1) from the current row
-        input_word <- as.character(words2_test[i, 1])
-        
-        # Call the predict_word function with the input word
+        line_sel <- sample(nrow(words2_t),1)
+        input_word <- as.character(words2_t[line_sel, 1])
         
         predicted_word <- predict_word(input_word)
         
-        # Extract the actual target word (word_2) from the current row
-        actual_word <- words2_test[i, "word_2"]
+        actual_word <- words2_t[line_sel, "word_2"]
         
-        # Compare the predicted word with the actual word
         if (predicted_word == actual_word) {
                 correct_predictions <- correct_predictions + 1
         }
 }
 
-# Calculate accuracy
+# accuracy 2g
 accuracy_2g <- correct_predictions / total_predictions
-cat("Accuracy_2g:", accuracy, "\n")
-
+cat("Accuracy_2g:", accuracy_2g, "\n")
 
 
 # testing accuracy using 3-grams
 correct_predictions <- 0
-total_predictions <- 2000
-# total_predictions <- nrow(words3_test)
+total_predictions <- 5000
 
-# Iterate through each row in words3_test
 for (i in 1:total_predictions) {
-        # Extract input word (word_1) from the current row
-        input_word <- as.character(paste(words3_test[i, 1],words3_test[i, 2], sep= " " ))
         
-        # Call the predict_word function with the input word
+        line_sel <- sample(nrow(words3_t),1)
+        input_word <- as.character(paste(words3_t[line_sel, 1],words3_t[line_sel, 2], sep= " " ))
         
         predicted_word <- predict_word(input_word)
         
-        # Extract the actual target word (word_2) from the current row
-        actual_word <- words2_test[i, "word_2"]
+        actual_word <- words3_t[line_sel, "word_3"]
         
-        # Compare the predicted word with the actual word
         if (predicted_word == actual_word) {
                 correct_predictions <- correct_predictions + 1
         }
 }
 
-# Calculate accuracy
+# accuracy 3g
 accuracy_3g <- correct_predictions / total_predictions
-cat("Accuracy_3g:", accuracy, "\n")
+cat("Accuracy_3g:", accuracy_3g, "\n")
 
 
+# testing accuracy using 4-grams
+correct_predictions <- 0
+total_predictions <- 5000
+
+for (i in 1:total_predictions) {
+  
+  line_sel <- sample(nrow(words4_t),1)
+  input_word <- as.character(paste(words4_t[line_sel, 1],words4_t[line_sel, 2], words4_t[line_sel, 3], sep= " " ))
+  
+  predicted_word <- predict_word(input_word)
+  
+  actual_word <- words4_t[line_sel, "word_4"]
+  
+  if (predicted_word == actual_word) {
+    correct_predictions <- correct_predictions + 1
+  }
+}
+
+# accuracy 4g
+accuracy_4g <- correct_predictions / total_predictions
+cat("Accuracy_4g:", accuracy_4g, "\n")
+
+# hope it works well
 
 
 
