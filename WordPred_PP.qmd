@@ -13,7 +13,7 @@ This project is the final part of a 10 course [Data Science track by Johns Hopk
 
 -   Code used to prepare model, create an app is available [here](https://github.com/Pavel-droid/SwiftKey-Capstone).
 
-I hope you are going to enjoy my work. :)
+I hope you are going to enjoy my work.
 
 ## Data preparation
 
@@ -46,3 +46,7 @@ Each box is average result of 10x1000 predictions from one, two, three words as 
 -   Accuracy of this model is not great, as it uses very limited corpus and it is also built on simple n-gram prediction.
 
 -   There are for sure plenty of other approaches to make it more accurate, but this was not a target of this project.
+
+    Thx
+
+    P

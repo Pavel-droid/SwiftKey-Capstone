@@ -6,6 +6,7 @@ library(quanteda)
 library(quanteda.textstats)
 library(quanteda.textplots)
 library(quanteda.textmodels)
+library(reader)
 
 
 # download
@@ -192,7 +193,6 @@ if (inp_l == 0){
 
 ################################################################################
 # model testing
-install.packages("reader")
 library("reader")
 
 path_twitter_test <- list[11,1]
@@ -254,8 +254,11 @@ words3_t <- readRDS("words3_t.rds")
 words4_t <- readRDS("words4_t.rds")
 
 # testing accuracy using 2-grams
+
+for (j in 1:10) {
+
 correct_predictions <- 0
-total_predictions <- 5000
+total_predictions <- 1000
 
 for (i in 1:total_predictions) {
         
@@ -272,13 +275,20 @@ for (i in 1:total_predictions) {
 }
 
 # accuracy 2g
-accuracy_2g <- correct_predictions / total_predictions
+accuracy_2g[j] <- correct_predictions / total_predictions
 cat("Accuracy_2g:", accuracy_2g, "\n")
+
+}
+
+summary(accuracy_2g)
 
 
 # testing accuracy using 3-grams
+
+for (j in 1:10) {
+
 correct_predictions <- 0
-total_predictions <- 5000
+total_predictions <- 1000
 
 for (i in 1:total_predictions) {
         
@@ -295,13 +305,20 @@ for (i in 1:total_predictions) {
 }
 
 # accuracy 3g
-accuracy_3g <- correct_predictions / total_predictions
+accuracy_3g[j] <- correct_predictions / total_predictions
 cat("Accuracy_3g:", accuracy_3g, "\n")
+
+}
+
+summary(accuracy_3g)
 
 
 # testing accuracy using 4-grams
+
+for (j in 1:10) {
+
 correct_predictions <- 0
-total_predictions <- 5000
+total_predictions <- 1000
 
 for (i in 1:total_predictions) {
   
@@ -318,10 +335,23 @@ for (i in 1:total_predictions) {
 }
 
 # accuracy 4g
-accuracy_4g <- correct_predictions / total_predictions
+accuracy_4g[j] <- correct_predictions / total_predictions
 cat("Accuracy_4g:", accuracy_4g, "\n")
 
-# hope it works well
+}
+
+summary(accuracy_4g)
+
+boxplot(accuracy_2g, accuracy_3g, accuracy_4g,
+                ylab = "Accuracy")
+
+boxplot(list(accuracy_2g, accuracy_3g, accuracy_4g),
+        names = c("single word", "two words", "three words"),
+        xlab = "Input length",
+        ylab = "Accuracy")
+
+
+# hope it all works well
 
 
 
